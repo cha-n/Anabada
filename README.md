@@ -24,7 +24,7 @@
 ###### 다른 사용자들과 채팅을 통해 연락을 할 수 있다.
 * 결제
 <img src="https://user-images.githubusercontent.com/63387116/99189110-f4ca0e80-27a2-11eb-96a6-b7694adf11f1.JPG" width="500" height="300">
-
+![order1](https://user-images.githubusercontent.com/63387116/99189110-f4ca0e80-27a2-11eb-96a6-b7694adf11f1.JPG)
 ###### 주문하려는 상품을 확인하고 필요한 정보를 기입한 후 구매한다.<br>1개월, 3개월, 6개월, 1년 전까지의 주문 내역을 확인할 수 있고, 구매한 상품에 대한 리뷰를 작성할 수 있다.
 
 #### 개발 기간
