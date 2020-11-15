@@ -6,7 +6,7 @@
 
 <img src="https://user-images.githubusercontent.com/63387116/99181992-52dffd00-2775-11eb-8607-f76e759c7d4d.jpg" width="510" height="400">
 
-###### 월별 섭취하기 좋은 식재료의 효능과 정보를 알 수 있다.
+###### '농촌진흥청 이달의 음식정보' 데이터를 이용해 월별 섭취하기 좋은 식재료의 효능과 정보를 알 수 있다.
 * 판매·나눔·교환
 
 <img src="https://user-images.githubusercontent.com/63387116/99181666-393db600-2773-11eb-8d68-18b3f81f88da.jpg" width="400" height="450">
