@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.recommend">
+	<resultMap id="recommend" type="recommendVO">
+		<result property="recommend_NO" column="recommend_NO" />
+		<result property="articleNO" column="articleNO" />
+		<association property="articleVO" resultMap="articleVO"></association>
+		<association property="imageVO" resultMap="imageVO"></association>
+	</resultMap>
+
+	<resultMap id="articleVO" type="articleVO">
+		<result property="title" column="title" />
+		<result property="price" column="price" />
+	</resultMap>
+	
+	<resultMap id="imageVO" type="imageVO">
+		<result property="imageFileName" column="imageFileName" />
+	</resultMap>
+	
+	<select id="list_Recommendation" resultMap="recommend">
+		SELECT r.recommend_NO, r.articleNO, b.title, b.price, f.imageFileName
+		FROM recommend r, s_board b, s_imagefile f
+		WHERE r.articleNO=b.articleNO AND b.articleNO=f.articleNO
+		GROUP BY r.articleNO
+	</select>
+
+</mapper>

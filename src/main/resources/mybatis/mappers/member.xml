@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.member">
+	<resultMap id="member" type="memberVO">
+		<result property="id" column="id" />
+		<result property="n_name" column="n_name" />
+		<result property="pwd" column="pwd" />
+		<result property="address" column="address" />
+		<result property="profile" column="profile" />
+		<result property="name" column="name" />
+	</resultMap>
+		
+	<select id="checkId" parameterType="String" resultType="String">
+		SELECT
+			CASE WHEN COUNT(*)=1 THEN 'true'
+    		ELSE 'false'
+    		END
+		FROM v_member
+		WHERE id = #{id}
+	</select>
+	
+	<select id="checkName" parameterType="String" resultType="String">
+		SELECT
+			CASE WHEN COUNT(*)=1 THEN 'true'
+    		ELSE 'false'
+    		END
+		FROM v_member
+		WHERE n_name = #{n_name}
+	</select>
+	
+	<insert id="insertMember" parameterType="memberVO">
+		INSERT INTO v_member(id, n_name, pwd, address, name)
+		VALUES (#{id}, #{n_name}, #{pwd}, #{address}, #{name})
+	</insert>
+	
+	<select id="login" parameterType="memberVO" resultType="memberVO">
+		SELECT *
+		FROM v_member
+		WHERE id = #{id} AND pwd = #{pwd}
+	</select>
+	
+	<update id="updateName" parameterType="java.util.Map">
+		UPDATE v_member
+		SET n_name = #{n_name}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 프로필 사진 포함 회원 정보 변경 -->
+	<update id="updateMember1" parameterType="java.util.Map">
+		UPDATE v_member
+		SET pwd = #{pwd}, address = #{address}, n_name = #{n_name}, profile = #{profile}, name = #{name}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 프로필 사진 변경 없이 회원 정보 변경 -->
+	<update id="updateMember2" parameterType="java.util.Map">
+		UPDATE v_member
+		SET pwd = #{pwd}, address = #{address}, n_name = #{n_name}, name = #{name}
+		WHERE id = #{id}
+	</update>
+</mapper>

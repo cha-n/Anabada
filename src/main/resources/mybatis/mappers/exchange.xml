@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.spring.mysqltest.exchange">
+	<resultMap id="board" type="com.spring.mysqltest.exchange.dto.BoardDto">
+		<result property="board_seq" column="BOARD_SEQ" />
+		<result property="board_re_ref" column="BOARD_RE_REF" />
+		<result property="board_re_lev" column="BOARD_RE_LEV" />
+		<result property="board_re_seq" column="BOARD_RE_SEQ" />
+		<result property="board_writer" column="BOARD_WRITER" />
+		<result property="board_subject" column="BOARD_SUBJECT" />
+		<result property="board_content" column="BOARD_CONTENT" />
+		<result property="board_hits" column="BOARD_HITS" />
+		<result property="ins_date" column="INS_DATE" />
+		<result property="item" column="item" />
+		<result property="locat" column="LOCAT" />
+		<result property="SELL_YN" column="SELL_YN" />
+		<association property="memberVO" javaType="memberVO">
+			<result property="n_name" column="n_name" />
+			<result property="profile" column="profile" />
+		</association>
+		<association property="articleVO" javaType="articleVO">
+			<result property="articleNO" column="articleNO" />
+			<result property="title" column="title" />		
+			<result property="n_name" column="n_name" /> 
+			<result property="accepted" column="accepted" />
+		</association>
+	</resultMap>
+
+	
+
+	<select id="getBoardCnt" parameterType="com.spring.mysqltest.exchange.form.BoardForm" resultType="int">
+	
+		SELECT COUNT(*)
+		FROM EXCHANGE_BOARD
+	
+	</select>
+	<select id="selectItems" parameterType="int" resultType="String">
+		SELECT item 		
+		FROM EXCHANGE_BOARD
+		WHERE BOARD_SEQ = #{board_seq}
+	</select>
+	
+     <select id="getBoardList" parameterType="com.spring.mysqltest.exchange.form.BoardForm" resultType="com.spring.mysqltest.exchange.dto.BoardDto">
+    
+        SELECT *
+        FROM ( 
+                SELECT BOARD_SEQ 
+                     , BOARD_RE_REF 
+                     , BOARD_RE_LEV 
+                     , BOARD_RE_SEQ 
+                     , BOARD_WRITER 
+                     , BOARD_SUBJECT 
+                     , BOARD_CONTENT 
+                     , BOARD_HITS                  
+                     , CAST( DATE_FORMAT( INS_DATE, '%Y-%m-%d %H:%i:%s' ) AS CHAR(19) ) AS INS_DATE                     
+                     , item
+                     , LOCAT
+               FROM EXCHANGE_BOARD
+               ORDER BY BOARD_RE_REF DESC, BOARD_RE_SEQ ASC, BOARD_SEQ DESC
+              ) T1
+        LIMIT #{limit}  OFFSET #{offset} 
+    
+    </select>
+    
+    <delete id="updateBoardHits" parameterType="int">
+    
+        UPDATE EXCHANGE_BOARD 
+           SET BOARD_HITS = BOARD_HITS + 1             
+         WHERE BOARD_SEQ = #{board_seq}
+    
+    </delete>
+    
+    <select id="getBoardDetail" parameterType="int" resultMap="board">
+    
+        SELECT T1.*
+        FROM (
+                SELECT B.BOARD_SEQ 
+                     , B.BOARD_RE_REF 
+                     , B.BOARD_RE_LEV 
+                     , B.BOARD_RE_SEQ 
+                     , B.BOARD_WRITER 
+                     , B.BOARD_SUBJECT 
+                     , B.BOARD_CONTENT 
+                     , B.BOARD_HITS                     
+                     , CAST( DATE_FORMAT( B.INS_DATE, '%Y-%m-%d %H:%i:%s' ) AS CHAR(19) ) AS INS_DATE                    
+                     ,B.item
+                     ,B.LOCAT
+	        		 ,B.SELL_YN
+	        		 ,M.profile
+                FROM EXCHANGE_BOARD B,v_member M
+                WHERE B.BOARD_SEQ = #{board_seq} AND B.BOARD_WRITER=M.n_name
+                     
+              ) T1        
+    
+    </select>
+        
+    <select id="getBoardFileList" parameterType="int" resultType="com.spring.mysqltest.exchange.dto.BoardFileDto">
+    
+        SELECT T1.*
+        FROM (
+                SELECT BOARD_SEQ
+                     , FILE_NO
+                     , FILE_NAME_KEY
+                     , FILE_NAME
+                     , FILE_PATH
+                     , FILE_SIZE
+                     , REMARK
+                     , INS_USER_ID
+                    , CAST( DATE_FORMAT( INS_DATE, '%Y-%m-%d %H:%i:%s' ) AS CHAR(19) ) AS INS_DATE                   
+                FROM EXCHANGE_BOARD_FILE
+                WHERE BOARD_SEQ = #{board_seq}
+                AND DEL_YN = 'N'
+               <!--  ORDER BY FILE_NO ASC --> 
+              ) T1        
+            
+    </select>
+    
+    <select id="getBoardReRef" parameterType="com.spring.mysqltest.exchange.form.BoardForm" resultType="int">
+    
+        SELECT IFNULL(MAX(BOARD_RE_REF), 0) + 1
+        FROM EXCHANGE_BOARD
+    
+    </select>
+    
+    <insert id="insertBoard" parameterType="com.spring.mysqltest.exchange.form.BoardForm">
+        
+        <selectKey resultType="int" keyProperty="board_seq" order="AFTER">
+ 
+            SELECT LAST_INSERT_ID()
+ 
+        </selectKey>
+        
+        INSERT 
+        INTO EXCHANGE_BOARD 
+        (
+                BOARD_RE_REF
+              , BOARD_RE_LEV
+              , BOARD_RE_SEQ
+              , BOARD_WRITER
+              , BOARD_SUBJECT
+              , BOARD_CONTENT
+              , INS_DATE
+              , item
+              , LOCAT
+        ) 
+        VALUES 
+        (
+              #{board_re_ref}
+            , 0
+            , 0
+            , #{board_writer}
+            , #{board_subject}
+            , #{board_content}
+            , NOW() 
+            , #{item}
+            , #{locat}
+        )
+            
+    </insert>
+    
+    <insert id="insertBoardFile" parameterType="com.spring.mysqltest.exchange.form.BoardFileForm">
+    
+        <selectKey resultType="int" keyProperty="file_no" order="BEFORE">
+            
+            SELECT IFNULL(MAX(FILE_NO), 0) + 1 
+            FROM EXCHANGE_BOARD_FILE
+            WHERE BOARD_SEQ = #{board_seq}
+              
+        </selectKey>
+                
+        INSERT 
+        INTO EXCHANGE_BOARD_FILE
+        (
+              BOARD_SEQ
+            , FILE_NO
+            , FILE_NAME_KEY
+            , FILE_NAME
+            , FILE_PATH
+            , FILE_SIZE
+            , DEL_YN 
+            , INS_USER_ID
+            , INS_DATE            
+        )
+        VALUES
+        (
+              #{board_seq}
+            , #{file_no}
+            , #{file_name_key}
+            , #{file_name}
+            , #{file_path}
+            , #{file_size}
+            , 'N'
+            , 'NONMEMBER'
+            , NOW() 
+        )    
+        
+    </insert>
+    
+    <insert id="insertBoardFail" parameterType="com.spring.mysqltest.exchange.form.BoardForm">
+    
+        INSERT 
+        INTO EXCHANGE_BOARD 
+        (
+                BOARD_RE_REF
+              , BOARD_RE_LEV
+              , BOARD_RE_SEQ
+              , BOARD_WRITER
+              , BOARD_SUBJECT
+              , BOARD_CONTENT         
+              , INS_DATE
+              , item
+        ) 
+        VALUES 
+        (
+              0
+            , 0
+            , 0
+            , #{board_writer1}
+            , #{board_subject}
+            , #{board_content}      
+            , NOW() 
+            , #{item}
+        )
+    
+    </insert>
+     <!-- 정은수정(게시글 삭제시 이미지도 삭제 ) -->  
+    <delete id="deleteBoard" parameterType="com.spring.mysqltest.exchange.form.BoardForm">
+    	<!-- 정은수정!!- 디비  제약조건 추가 하기  -->
+    	DELETE 
+		FROM EXCHANGE_BOARD
+		WHERE BOARD_SEQ = #{board_seq}
+    
+    </delete>
+    
+    <delete id="updateBoard" parameterType="com.spring.mysqltest.exchange.form.BoardForm">
+    
+        UPDATE EXCHANGE_BOARD 
+           SET BOARD_SUBJECT = #{board_subject}
+             , BOARD_CONTENT = #{board_content}
+             , item= #{item}
+             , LOCAT= #{locat}
+         WHERE BOARD_SEQ = #{board_seq}
+    
+    </delete>
+    
+    <select id="getBoardReplyInfo" parameterType="com.spring.mysqltest.exchange.form.BoardForm" resultType="com.spring.mysqltest.exchange.dto.BoardDto">
+    
+        SELECT BOARD_SEQ
+             , BOARD_RE_REF
+             , BOARD_RE_LEV
+             , BOARD_RE_SEQ
+        FROM EXCHANGE_BOARD
+        WHERE BOARD_SEQ = #{board_parent_seq}
+    
+    </select>
+    
+    <delete id="updateBoardReSeq" parameterType="com.spring.mysqltest.exchange.form.BoardForm">
+    
+        UPDATE EXCHANGE_BOARD
+           SET BOARD_RE_SEQ = BOARD_RE_SEQ + 1
+
+         WHERE BOARD_RE_REF = #{board_re_ref} 
+           AND BOARD_RE_SEQ > #{board_re_seq}
+    
+    </delete>
+    
+    <insert id="insertBoardReply" parameterType="com.spring.mysqltest.exchange.form.BoardForm">
+    
+        INSERT 
+        INTO EXCHANGE_BOARD 
+        (
+                BOARD_RE_REF
+              , BOARD_RE_LEV
+              , BOARD_RE_SEQ
+              , BOARD_WRITER
+              , BOARD_SUBJECT
+              , BOARD_CONTENT
+              , INS_DATE
+              , item
+        ) 
+        VALUES 
+        (
+              #{board_re_ref}
+            , #{board_re_lev} + 1
+            , #{board_re_seq} + 1
+            , #{board_writer}
+            , #{board_subject}
+            , #{board_content}
+            , NOW() 
+            , #{item}
+        )
+    
+    </insert>
+    
+    <delete id="deleteBoardFile" parameterType="com.spring.mysqltest.exchange.form.BoardFileForm">
+    
+      	DELETE FROM EXCHANGE_BOARD_FILE
+    	WHERE BOARD_SEQ = #{board_seq} AND FILE_NO = #{file_no}
+    
+    </delete>
+    
+    
+    <select id="getFileNameKey" parameterType="com.spring.mysqltest.exchange.form.BoardFileForm" resultType="String">
+    	SELECT FILE_NAME_KEY
+    	FROM EXCHANGE_BOARD_FILE
+    	WHERE BOARD_SEQ = #{board_seq}
+    </select>  
+          
+     <!--정은수정3 쓴글목록(교환) -->
+     <select id="getMyExchangeList" parameterType="com.spring.mysqltest.member.vo.MemberVO" resultType="com.spring.mysqltest.exchange.dto.BoardDto">
+    	SELECT BOARD_SEQ, BOARD_SUBJECT, SELL_YN, BOARD_WRITER
+    	FROM EXCHANGE_BOARD
+    	WHERE BOARD_WRITER LIKE #{n_name} <!--로그인한 아이디를 매개변수로 전달받음.  -->
+    	ORDER BY BOARD_SEQ DESC
+     	LIMIT #{limit}  OFFSET #{offset}  
+     </select> 
+     
+     <select id="getMyExchangeCnt" parameterType="String" resultType="int">	
+		SELECT COUNT(*)
+		FROM EXCHANGE_BOARD
+		WHERE BOARD_WRITER LIKE #{n_name}   
+	</select>
+
+
+     <!--쓴글목록(교환) 삭제-->
+     <delete id="deleteMyExchangeList" parameterType="com.spring.mysqltest.exchange.form.BoardForm">
+     	DELETE 
+     	FROM EXCHANGE_BOARD
+     	WHERE BOARD_SEQ= #{board_seq};
+     </delete>   
+    
+    
+     <!--쓴글목록 (교환 -판매자)-->
+     <select id="getSellerExchangeList" parameterType="com.spring.mysqltest.exchange.form.BoardForm" resultType="com.spring.mysqltest.exchange.dto.BoardDto">
+    	SELECT BOARD_SEQ, BOARD_SUBJECT, SELL_YN, BOARD_WRITER
+    	FROM EXCHANGE_BOARD
+    	WHERE BOARD_WRITER LIKE #{board_writer} <!--판매자 아이디를 매개변수로 전달받음.  -->
+    	ORDER BY BOARD_SEQ DESC
+     	LIMIT #{limit}  OFFSET #{offset}  
+     </select> 
+     
+     <select id="getSellerExchangeCnt" parameterType="String" resultType="int">	
+		SELECT COUNT(*)
+		FROM EXCHANGE_BOARD
+		WHERE BOARD_WRITER LIKE #{board_writer}   
+	</select>
+    
+	
+	<!--  썸네일 -->
+    <select id="selectThumbnail" parameterType="int" resultType="com.spring.mysqltest.exchange.dto.BoardFileDto">
+		SELECT FILE_NAME, FILE_NAME_KEY, FILE_PATH
+		FROM EXCHANGE_BOARD_FILE
+		WHERE BOARD_SEQ=#{board_seq} AND DEL_YN='N'
+		GROUP BY BOARD_SEQ
+	</select>
+    
+    
+	<!-- 교환 게시판-keyword로 검색된 목록 -->
+	<select id="listSearch" parameterType="com.spring.mysqltest.exchange.form.BoardForm" resultMap="board">
+     
+   	  SELECT *
+       FROM (
+           SELECT *
+               FROM EXCHANGE_BOARD
+               WHERE 1=1                   
+     			 <include refid="search"></include>    	   
+     			  ORDER BY BOARD_SEQ DESC
+     		) T1
+       LIMIT #{limit}  OFFSET #{offset} 
+       
+	 </select>
+	
+
+	
+    <!-- 검색된 게시물 개수 -->
+    <select id="countSearch" parameterType="com.spring.mysqltest.exchange.form.BoardForm" resultType="int">
+		 SELECT COUNT(*)
+ 	 	 FROM EXCHANGE_BOARD
+ 	 	 WHERE 1=1
+   			<include refid="search"></include>
+   			<![CDATA[		
+   				AND BOARD_SEQ > 0	
+   		    ]]>	 
+	</select>	
+	
+	<sql id="search">
+		<if test="searchType != null">
+			<if test="searchType == 'S'.toString()">AND BOARD_SUBJECT like CONCAT('%',#{keyword},'%') </if>
+ 			<if test="searchType == 'C'.toString()">AND BOARD_CONTENT like CONCAT('%',#{keyword},'%')</if>
+  			<if test="searchType == 'L'.toString()">AND LOCAT like CONCAT('%',#{keyword},'%')</if>
+ 			<if test="searchType == 'SL'.toString()">AND (BOARD_SUBJECT like CONCAT('%',#{keyword},'%')) or (LOCAT like CONCAT('%',#{keyword},'%'))</if>
+		</if>
+	
+	</sql>	
+	
+		
+    <select id="getWriter" parameterType="int" resultType="String">
+    
+        SELECT BOARD_WRITER
+        FROM EXCHANGE_BOARD
+        WHERE BOARD_SEQ=#{BOARD_SEQ}
+    
+    </select>
+
+    <update id="updateSell_YN" parameterType="java.util.Map">
+    	UPDATE EXCHANGE_BOARD
+    	SET SELL_YN = #{sell_YN}
+    	WHERE BOARD_SEQ = #{board_seq}
+    </update>
+    
+    
+    
+      
+</mapper>

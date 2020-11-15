@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.sharecomment">
+	<resultMap id="comment" type="commentVO">
+		<result property="comment_NO" column="comment_NO" />
+		<result property="parent_NO" column="parent_NO" />
+		<result property="post_NO" column="post_NO" />
+		<result property="n_name" column="n_name" />
+		<result property="content" column="content" />
+		<result property="seq" column="seq" />
+		<result property="secret" column="secret" />
+		<result property="re_name" column="re_name" />
+		<result property="writedate" column="writedate" />
+		<association property="memberVO" javaType="memberVO">
+			<result property="n_name" column="n_name" />
+			<result property="profile" column="profile" />
+		</association>
+	</resultMap> 
+	
+	
+	<select id="selectComments" parameterType="int" resultMap="comment">
+		SELECT c.comment_NO, c.parent_NO, c.post_NO, c.n_name, c.content, c.seq, c.secret, c.re_name, c.writedate, m.profile
+		FROM share_comment c, v_member m
+		WHERE post_NO = #{post_NO} AND c.n_name=m.n_name
+		ORDER BY parent_NO ASC, seq ASC
+	</select>
+	
+	<insert id="insertComment">
+		INSERT INTO share_comment(comment_NO, parent_NO, post_NO, n_name, content, seq, secret, re_name)
+		VALUES (#{comment_NO}, #{parent_NO}, #{post_NO}, #{n_name}, #{content}, #{seq}, #{secret}, #{re_name})
+	</insert>
+	
+	<select id="select_commentNO" resultType="int">
+		SELECT IFNULL(max(comment_NO)+1,1) FROM share_comment
+	</select>
+	
+	<select id="selectSeq" parameterType="int" resultType="int">
+		SELECT max(seq)+1
+		FROM share_comment
+		WHERE parent_NO = #{parent_NO}
+	</select>
+	
+	<select id="checkSeq" parameterType="int" resultType="com.spring.mysqltest.share.form.CommentVO">
+		SELECT seq, parent_NO, n_name
+		FROM share_comment
+		WHERE comment_NO = #{comment_NO}
+	</select>
+	
+	<delete id="deleteComment1" parameterType="int">
+		DELETE FROM share_comment
+		WHERE parent_NO = #{parent_NO}
+	</delete>
+	
+	<delete id="deleteComment2" parameterType="int">
+		DELETE FROM share_comment
+		WHERE comment_NO = #{comment_NO}
+	</delete>
+	
+	<update id="updateComment" parameterType="java.util.Map">
+		UPDATE share_comment
+		SET content = #{content}, secret = #{secret}
+		WHERE comment_NO = #{comment_NO}
+	</update>
+		
+	
+</mapper>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.cart">
+	<resultMap id="cart" type="cartVO">
+		<result property="cart_NO" column="cart_NO" />
+		<result property="articleNO" column="articleNO" />
+		<result property="n_name" column="n_name" />
+		<result property="quantity" column="quantity" />
+		<association property="articleVO" javaType="articleVO">
+			<result property="title" column="title" />
+			<result property="price" column="price" />
+		</association>
+		<association property="imageVO" javaType="imageVO">
+			<result property="imageFileName" column="imageFileName" />
+		</association>
+	</resultMap>
+	
+	<!-- 장바구니에 상품 추가 -->
+	<insert id="insertCart" parameterType="cartVO">
+		INSERT INTO cart(articleNO, n_name, quantity)
+		VALUES ( #{articleNO}, #{n_name}, #{quantity} )
+	</insert>
+	
+	<!-- 장바구니에서 상품 삭제 -->
+	<delete id="deleteCart" parameterType="cartVO">
+		DELETE FROM cart
+		WHERE articleNO = #{articleNO} AND n_name = #{n_name}
+	</delete>
+	
+	<!-- 장바구니에 해당 상품이 이미 있는지 확인 -->
+	<select id="cartOverlapped" parameterType="cartVO" resultType="String">
+		SELECT
+			CASE WHEN COUNT(*)=1 THEN 'yes'
+    		ELSE 'no'
+    		END
+		FROM cart
+		WHERE n_name = #{n_name} AND articleNO = #{articleNO}
+	</select>
+	
+	<!-- 장바구니 보기 -->
+	<select id="listCart" parameterType="String" resultMap="cart">
+		SELECT  c.articleNO, c.quantity, b.title, b.price, f.imagefileName
+		FROM cart c, s_board b, s_imagefile f
+		WHERE c.n_name = #{n_name} AND c.articleNO=b.articleNO AND f.articleNO=b.articleNO
+		GROUP BY c.articleNO
+	</select>
+	
+</mapper>

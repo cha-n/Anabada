@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.seller">
+	<resultMap id="articlesResult" type="articleVO">
+		<result property="articleNO" column="articleNO" />
+		<result property="articleNO_" column="articleNO_" />
+		<result property="title" column="title" />
+		<result property="content" column="content" />
+		<result property="imageFileName" column="imageFileName" />
+		<result property="writeDate" column="writeDate" />
+		<result property="n_name" column="n_name" />
+		<result property="accepted" column="accepted" />
+		<result property="item" column="item" />
+    <result property="hits" column="hits" />
+		<result property="price" column="price" />
+		<result property="deleted" column="deleted" />
+		<association property="imageVO" resultMap="imgResult"></association>
+	</resultMap>
+
+	<resultMap id="imgResult" type="imageVO">
+		<result property="imageFileNO" column="imageFileNO" />
+		<result property="articleNO" column="articleNO" />
+		<result property="imageFileName" column="imageFileName" />
+	</resultMap>
+
+  <!-- 모든 글 select -->
+	<select id="selectAllArticlesList" resultMap="articlesResult" parameterType="java.util.Map">
+    <![CDATA[
+      SELECT *
+      from s_board
+      ORDER BY articleNO DESC
+      LIMIT #{pageStart}, #{perPageNum}
+    ]]>
+	</select>
+
+	<!-- 승인된 글 select -->
+	<select id="selectAcceptedArticlesList" resultMap="articlesResult" parameterType="java.util.Map">
+    <![CDATA[
+      SELECT *
+      FROM s_board
+      WHERE accepted = 1 AND deleted = 0
+      ORDER BY articleNO_ DESC
+      LIMIT #{pageStart}, #{perPageNum}
+    ]]>
+	</select>
+
+
+	<select id="selectNewArticleNO" resultType="int">
+		<![CDATA[
+			SELECT IFNULL(max(articleNO)+1,1)
+    		FROM s_board
+		]]>
+	</select>
+
+	<select id="selectNewArticleNO_" resultType="int">
+		<![CDATA[
+			SELECT IFNULL(max(articleNO_)+1,1)
+    		FROM s_board
+		]]>
+	</select>
+
+	<!--글 조회 -->
+	<select id="selectArticle" resultType="articleVO" parameterType="int">
+		<![CDATA[
+			SELECT *
+			FROM s_board
+			WHERE articleNO=#{articleNO}
+		]]>
+	</select>
+
+	<!-- 조회수 증가 -->
+	<update id="updateArticleHits" parameterType="int">
+		UPDATE s_board
+		SET hits = hits+1
+		WHERE articleNO=#{articleNO}
+	</update>
+
+	<!--글 승인 -->
+	<update id="acceptArticle" parameterType="java.util.Map">
+		UPDATE s_board
+		SET
+		accepted = 1, articleNO_=#{articleNO_}
+		WHERE articleNO=#{articleNO}
+	</update>
+
+	<!--글 수정 -->
+	<update id="updateArticle" parameterType="java.util.Map">
+		UPDATE s_board
+		SET item = #{item}, title = #{title}, content=#{content}, price=#{price}
+		<!-- <if test="imageFileName!='' and imageFileName!=null">
+			, imageFileName=#{imageFileName}
+		</if> -->
+		WHERE articleNO=#{articleNO}
+	</update>
+
+
+	<!--글 삭제 -->
+	<delete id="deleteArticle" parameterType="int">
+    <![CDATA[
+      UPDATE s_board
+      SET deleted = 1
+    	WHERE articleNO=#{articleNO}
+    ]]>
+	</delete>
+
+	<!--글 추가-->
+	<insert id="insertNewArticle" parameterType="java.util.Map">
+		<![CDATA[
+			INSERT into s_board(articleNO, item, title, content, imageFileName, n_name, writeDate, accepted, price)
+			VALUES(#{articleNO}, #{item}, #{title}, #{content}, null, #{n_name}, NOW(), 0, #{price})
+		 ]]>
+	</insert>
+	<insert id="insertNewImage"  parameterType="list">
+		INSERT INTO s_imageFile
+		VALUES
+		<foreach item="item" index="index" collection="list" separator=" , "  >
+			(#{item.imageFileNO}, #{item.imageFileName}, NOW(), #{item.articleNO})
+		</foreach>
+	</insert>
+
+	<!-- 새 이미지 번호 조회 -->
+	<select id="selectNewImageFileNO" resultType="int">
+    	<![CDATA[
+    		SELECT IFNULL(max(imageFileNO)+1, 1)
+    		FROM s_imageFile
+    	]]>
+	</select>
+
+	<!-- 이미지 테이블에서 글 번호에 대한 이미지 파일 조회 -->
+	<select id="selectImageFileList" resultMap="imgResult" parameterType="int">
+    	<![CDATA[
+      		SELECT *
+      		FROM s_imageFile
+      		WHERE articleNO=#{articleNO}
+    	]]>
+	</select>
+
+	<!-- 이미지 삭제 -->
+	<!--
+	<delete id="deleteArticleImage" parameterType="int">
+		DELETE FROM s_imageFile
+		WHERE imageFileNO=#{imageFileNO}
+	</delete>  -->
+
+	<!-- (예슬) 이미지 삭제 -->
+	<delete id="deleteExistedImage" parameterType="java.util.Map">
+		DELETE FROM s_imageFile
+		WHERE articleNO = #{articleNO} AND imageFileName = #{imageFileName}
+	</delete>
+
+	<!--
+	<insert id="insertArticleImage" parameterType="imageVO">
+	    <![CDATA[
+			INSERT INTO s_imagefile
+			VALUES(#{imageFileNO}, #{imageFileName}, now(), #{articleNO});
+		]]>
+	</insert>  -->
+
+	<update id="updateArticleImage" parameterType="imageVO">
+		update s_imagefile
+		set imageFileName = #{imageFileName}
+		where imageFileNO=#{imageFileNO} and articleNO=#{articleNO}
+	</update>
+
+	<!-- 모든 글 중 keyword로 검색 -->
+	<select id="selectAllArticlesList_searchedByKeyword" parameterType="java.util.Map" resultMap="articlesResult">
+    <![CDATA[
+      SELECT *
+      FROM s_board
+      WHERE title LIKE CONCAT('%',#{keyword},'%')
+      ORDER BY articleNO DESC
+      LIMIT #{pageStart}, #{perPageNum}
+    ]]>
+	</select>
+
+	<!-- 승인된 글 중 keyword로 검색 -->
+	<select id="selectAcceptedArticlesList_searchedByKeyword" parameterType="java.util.Map" resultMap="articlesResult">
+    <![CDATA[
+      SELECT *
+      FROM s_board
+      WHERE accepted = 1 AND deleted = 0 AND title LIKE CONCAT('%',#{keyword},'%')
+      ORDER BY articleNO_ DESC
+      LIMIT #{pageStart}, #{perPageNum}
+    ]]>
+	</select>
+
+	<!-- 페이징 -->
+	<!-- 모든 게시글 갯수 -->
+	<select id="countAllArticlesList" resultType="int">
+		<![CDATA[
+			SELECT COUNT(*)
+    		FROM s_board
+		]]>
+	</select>
+
+	<!-- 승인된 게시글 갯수 -->
+	<select id="countAcceptedArticlesList" resultType="int">
+		<![CDATA[
+			SELECT COUNT(*)
+    		FROM s_board
+    		WHERE accepted = 1
+		]]>
+	</select>
+
+	<!-- 모든 게시글 갯수_ 키워드 검색 -->
+	<select id="countAllArticlesList_searchedByKeyword" parameterType="String" resultType="int">
+		<![CDATA[
+			SELECT COUNT(*)
+    		FROM s_board
+    		WHERE title LIKE CONCAT('%',#{keyword},'%')
+		]]>
+	</select>
+
+	<!-- 승인된 게시글 갯수_ 키워드 검색 -->
+	<select id="countAcceptedArticlesList_searchedByKeyword" parameterType="String" resultType="int">
+		<![CDATA[
+			SELECT COUNT(*)
+    		FROM s_board
+    		WHERE accepted = 1 AND title LIKE CONCAT('%',#{keyword},'%')
+		]]>
+	</select>
+
+	<select id="selectThumbnail" parameterType="int" resultType="String">
+		SELECT imageFileName
+		FROM s_imagefile
+		WHERE articleNO = #{articleNO}
+		GROUP BY articleNO
+	</select>
+
+   <select id="selectItemInfo" parameterType="int" resultType="articleVO">
+      SELECT b.title, b.price, f.imageFileName
+      FROM s_board b, s_imagefile f
+      WHERE b.articleNO = #{articleNO} AND b.articleNO = f.articleNO
+      GROUP BY b.articleNO
+   </select>
+
+   <!-- 작성자 검색 -->
+   	<!-- 모든 게시글 갯수_ 작성자 검색 -->
+   	<select id="countAllArticlesList_searchedByWriter" parameterType="String" resultType="int">
+   		<![CDATA[
+   			SELECT COUNT(*)
+       		FROM s_board
+       		WHERE n_name = #{writer}
+   		]]>
+   	</select>
+
+   	<!-- 승인된 게시글 갯수_ 작성자 검색 -->
+   	<select id="countAcceptedArticlesList_searchedByWriter" parameterType="String" resultType="int">
+   		<![CDATA[
+   			SELECT COUNT(*)
+       		FROM s_board
+       		WHERE accepted = 1 AND deleted = 0 AND n_name = #{writer}
+   		]]>
+   	</select>
+
+
+   	<!-- 모든 글 select -->
+   	<select id="selectAllArticlesList_searchedByWriter" resultMap="articlesResult" parameterType="java.util.Map">
+       <![CDATA[
+         SELECT *
+         FROM s_board
+         WHERE n_name = #{writer}
+         ORDER BY articleNO DESC
+         LIMIT #{pageStart}, #{perPageNum}
+       ]]>
+   	</select>
+
+   	<!-- 승인된 글 select -->
+   	<select id="selectAcceptedArticlesList_searchedByWriter" resultMap="articlesResult" parameterType="java.util.Map">
+       <![CDATA[
+         SELECT *
+         FROM s_board
+         WHERE accepted = 1 AND deleted = 0 AND n_name = #{writer}
+         ORDER BY articleNO_ DESC
+         LIMIT #{pageStart}, #{perPageNum}
+       ]]>
+   	</select>
+
+    <!-- 글 번호로 작성자의 프로필 조회 -->
+	<select id="getProfile" parameterType="int" resultType="String">
+		<![CDATA[
+      		SELECT profile
+			FROM v_member, s_board
+			WHERE v_member.n_name=s_board.n_name AND articleNO=#{articleNO}
+    	]]>
+	</select>
+</mapper>

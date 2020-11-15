@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.bookmark">
+	<resultMap id="bookmark" type="bookmarkVO">
+		<result property="bookmark_NO" column="bookmark_NO" />
+		<result property="category" column="category" />
+		<result property="post_NO" column="post_NO" />
+		<result property="n_name" column="n_name" />
+		<association property="boardForm" resultMap="boardForm"></association>
+		<association property="boardFileForm" resultMap="boardFileForm"></association>
+		<association property="articleVO" resultMap="farmerForm"></association>
+		<association property="imageVO" resultMap="imageForm"></association>
+	</resultMap>
+	
+	<!-- 글번호와 글제목을 bookmark목록과 함께 불러오기 위해 사용 -->
+	<resultMap id="boardForm" type="com.spring.mysqltest.board.form.BoardForm">
+		<result property="board_seq" column="board_seq" />
+		<result property="board_subject" column="board_subject" />
+		<result property="board_writer" column="board_writer" />
+	</resultMap>
+	
+	<resultMap id="boardFileForm" type="com.spring.mysqltest.board.form.BoardFileForm">
+		<result property="file_name_key" column="file_name_key" />
+		<result property="file_name" column="file_name" />
+		<result property="file_path" column="file_path" />
+	</resultMap>
+	
+	<!-- 글번호와 글제목을 bookmark목록과 함께 불러오기 위해 사용 -->
+	<resultMap id="farmerForm" type="articleVO">
+		<result property="articleNO" column="articleNO" />
+		<result property="title" column="title" />
+		<result property="n_name" column="n_name" />
+	</resultMap>
+	
+	<resultMap id="imageForm" type="imageVO">
+		<result property="imageFileName" column="imageFileName" />
+	</resultMap>
+	
+	<!-- 북마크 여부 확인 -->
+	<select id="checkBookmark" parameterType="java.util.Map" resultType="String">
+		SELECT
+			CASE WHEN COUNT(*)=1 THEN 'true'
+    		ELSE 'false'
+    		END
+		FROM bookmark
+		WHERE n_name = #{n_name} AND post_NO = #{post_NO} AND category = #{category}
+	</select>
+	
+	<!-- 북마크 추가 -->
+	<insert id="addBookmark1" parameterType="java.util.Map">
+		INSERT INTO bookmark(post_NO, n_name, category)
+		VALUES ( #{post_NO}, #{n_name}, #{category})
+	</insert>
+	
+	<!-- 북마크 삭제 -->
+	<delete id="deleteBookmark1" parameterType="java.util.Map">
+		DELETE FROM bookmark
+		WHERE n_name = #{n_name} AND post_NO = #{post_NO} AND category = #{category}
+	</delete>
+	
+	<!-- 카테고리별 북마크한 글의 수 -->
+	<select id="select_Total_Bookmark" parameterType="java.util.Map" resultType="int">
+		SELECT COUNT(*)
+		FROM bookmark
+		WHERE n_name = #{n_name} AND category = #{category}
+	</select>
+	
+	<!-- 판매 북마크 목록-->
+	<select id="selectSellBookmark" parameterType="String" resultMap="bookmark">
+		SELECT s.post_NO, b.board_subject, s.category, f.FILE_NAME_KEY, f.FILE_NAME, f.FILE_PATH, b.board_writer
+		FROM bookmark s, TB_BOARD b, TB_BOARD_FILE f
+		WHERE n_name = #{n_name} AND s.post_NO = b.board_seq AND category="판매" AND s.post_NO = f.board_seq
+		ORDER BY s.bookmark_NO DESC
+		LIMIT #{page},10
+	</select>
+	
+	<!-- 판매 카테고리에서 글이 삭제됐을 때 해당 글번호의 북마크 삭제 -->
+	<delete id="delete_BookmarkSell" parameterType="int">
+		DELETE FROM bookmark
+		WHERE post_NO = #{post_NO} AND category = "판매"
+	</delete>
+	
+	<!-- 농부 카테고리에서 글이 삭제됐을 때 해당 글번호의 북마크 삭제 -->
+	<delete id="delete_BookmarkFarmer" parameterType="int">
+		DELETE FROM bookmark
+		WHERE post_NO = #{articleNO} AND category = "농부"
+	</delete>
+	
+	<!-- 교환 카테고리에서 글이 삭제됐을 때 해당 글번호의 북마크 삭제 -->
+	<delete id="delete_BookmarkExchange" parameterType="int">
+		DELETE FROM bookmark
+		WHERE post_NO = #{articleNO} AND category = "교환"
+	</delete>
+	
+	<!-- 나눔 카테고리에서 글이 삭제됐을 때 해당 글번호의 북마크 삭제 -->
+	<delete id="delete_BookmarkShare" parameterType="int">
+		DELETE FROM bookmark
+		WHERE post_NO = #{articleNO} AND category = "나눔"
+	</delete>
+	
+	<!-- 농부 북마크 목록 -->
+	<select id="selectFarmerBookmark" parameterType="java.util.Map" resultMap="bookmark">
+		SELECT s.post_NO, d.title, s.category, f.imageFileName, d.n_name
+		FROM bookmark s, s_board d, s_imagefile f
+		WHERE s.n_name = #{n_name} AND s.post_NO = d.articleNO AND category="농부" AND s.post_NO = f.articleNO
+		GROUP BY s.post_NO
+		ORDER BY s.bookmark_NO DESC
+		LIMIT #{page},10
+	</select>
+	
+	<!-- 교환 북마크 목록 -->
+	<select id="selectExchangeBookmark" parameterType="java.util.Map" resultMap="bookmark">
+		SELECT s.post_NO, b.board_subject, s.category, f.FILE_NAME_KEY, f.FILE_NAME, f.FILE_PATH, b.board_writer
+		FROM bookmark s, exchange_board b, exchange_board_file f
+		WHERE n_name = #{n_name} AND s.post_NO = b.board_seq AND category="교환" AND s.post_NO = f.board_seq
+		ORDER BY s.bookmark_NO DESC
+		LIMIT #{page},10
+	</select>
+	
+	<!-- 나눔 북마크 목록 -->
+	<select id="selectShareBookmark" parameterType="java.util.Map" resultMap="bookmark">
+		SELECT s.post_NO, b.board_subject, s.category, f.FILE_NAME_KEY, f.FILE_NAME, f.FILE_PATH, b.board_writer
+		FROM bookmark s, share_board b, share_board_file f
+		WHERE n_name = #{n_name} AND s.post_NO = b.board_seq AND category="나눔" AND s.post_NO = f.board_seq
+		ORDER BY s.bookmark_NO DESC
+		LIMIT #{page},10
+	</select>
+</mapper>

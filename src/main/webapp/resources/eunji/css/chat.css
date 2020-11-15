@@ -1,0 +1,27 @@
+.mychat{
+	color : #3333;
+	background-color : #e23233
+}
+
+.chatbox{
+	background-color : #e6ecf3
+}
+
+.chat-left{
+	display: flex;
+    flex: 1;
+    flex-direction: row;
+    margin-bottom: 40px;
+}
+
+.chat-text{
+	padding: .4rem 1rem;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    background: #ffffff;
+    font-weight: 300;
+    line-height: 150%;
+    max-width: 150;
+    position: relative;
+}

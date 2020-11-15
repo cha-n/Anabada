@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration 	PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-config.dtd">
+	
+<configuration>
+	<typeAliases>
+		<typeAlias type="com.spring.mysqltest.member.vo.MemberVO"  alias="memberVO" />
+		<typeAlias type="com.spring.mysqltest.board.form.CommentVO"  alias="commentVO" />
+		<typeAlias type="com.spring.mysqltest.market.vo.VegatVO"  alias="vegatVO" />
+		<typeAlias type="com.spring.mysqltest.chat.vo.ChatVO"  alias="chatVO" />
+		<typeAlias type="com.spring.mysqltest.board.form.BookmarkVO"  alias="bookmarkVO" />
+		<typeAlias type="com.spring.mysqltest.seller.vo.ArticleVO"  alias="articleVO" />
+		<typeAlias type="com.spring.mysqltest.seller.vo.ImageVO"  alias="imageVO" />
+		<typeAlias type="com.spring.mysqltest.order.vo.OrderVO"  alias="orderVO" />
+		<typeAlias type="com.spring.mysqltest.main.vo.RecommendVO"  alias="recommendVO" />
+		<typeAlias type="com.spring.mysqltest.cart.vo.CartVO"  alias="cartVO" />
+		<typeAlias type="com.spring.mysqltest.seller.vo.ReviewVO"  alias="reviewVO" />
+	</typeAliases>
+</configuration>

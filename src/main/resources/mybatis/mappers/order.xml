@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.order">
+	<resultMap id="order" type="orderVO">
+		<result property="orderNO" column="orderNO" />
+		<result property="orderNO_" column="orderNO_" />
+		<result property="articleNO" column="articleNO" />
+		<result property="n_name" column="n_name" />
+		<result property="quantity" column="quantity" />
+		<result property="price" column="price" />
+		<result property="phoneNum" column="phoneNum" />
+		<result property="address" column="address" />
+		<result property="addressDetail" column="addressDetail" />
+		<result property="msg" column="msg" />
+		<result property="pay_method" column="pay_method" />
+		<result property="depositName" column="depositName" />
+		<result property="bank" column="bank" />
+		<result property="orderDate" column="orderDate" />
+		<result property="review_chk" column="review_chk" />
+		<association property="articleVO" javaType="articleVO">
+			<result property="title" column="title" />
+			<result property="deleted" column="deleted" />
+		</association>
+		<association property="imageVO" javaType="imageVO">
+			<result property="imageFileName" column="imageFileName" />
+		</association>
+	</resultMap>
+	
+	<insert id="insertOrder" parameterType="orderVO">
+		INSERT INTO s_order(orderNO, orderNO_, articleNO, n_name, quantity, price, phoneNum, address, addressDetail, msg, pay_method, depositName, bank, orderDate)
+		VALUES (#{orderNO}, #{orderNO_}, #{articleNO}, #{n_name}, #{quantity}, #{price}, #{phoneNum}, #{address}, #{addressDetail}, #{msg}, #{pay_method}, #{depositName}, #{bank}, NOW())
+	</insert>
+	
+	<select id="selectNewOrderNO" resultType="int">
+		SELECT IFNULL(MAX(orderNO) + 1, 1)
+		FROM s_order
+	</select>
+	
+	<select id="selectOrderResult" parameterType="int" resultType="orderVO">
+		SELECT o.orderNO, o.articleNO, o.quantity, o.price, b.title, i.imageFileName, o.address, o.addressDetail, o.phoneNum, o.msg, o.pay_method, o.bank
+		FROM s_order o,s_board b,s_imagefile i
+		WHERE o.orderNO = #{orderNO} AND o.articleNO=b.articleNO AND i.articleNO=b.articleNO
+		GROUP BY o.orderNO
+	</select>
+	
+	<select id="select_Orders_1M" parameterType="String" resultMap="order">
+		SELECT o.orderNO, o.orderNO_, o.articleNO, o.quantity, o.price, b.title, i.imageFileName, o.orderDate, o.review_chk, b.deleted
+		FROM s_order o,s_board b,s_imagefile i
+		WHERE o.articleNO=b.articleNO AND i.articleNO=b.articleNO AND o.n_name = #{n_name} AND orderDate BETWEEN DATE_ADD(NOW(),INTERVAL -1 MONTH ) AND NOW()
+		GROUP BY o.orderNO
+		ORDER BY o.orderDate DESC
+	</select>
+	
+	<select id="select_Orders_3M" parameterType="String" resultMap="order">
+		SELECT o.orderNO, o.orderNO_, o.articleNO, o.quantity, o.price, b.title, i.imageFileName, o.orderDate, o.review_chk, b.deleted
+		FROM s_order o,s_board b,s_imagefile i
+		WHERE o.articleNO=b.articleNO AND i.articleNO=b.articleNO AND o.n_name = #{n_name} AND orderDate BETWEEN DATE_ADD(NOW(),INTERVAL -3 MONTH ) AND NOW()
+		GROUP BY o.orderNO
+		ORDER BY o.orderDate DESC
+	</select>
+	
+	<select id="select_Orders_6M" parameterType="String" resultMap="order">
+		SELECT o.orderNO, o.orderNO_, o.articleNO, o.quantity, o.price, b.title, i.imageFileName, o.orderDate, o.review_chk, b.deleted
+		FROM s_order o,s_board b,s_imagefile i
+		WHERE o.articleNO=b.articleNO AND i.articleNO=b.articleNO AND o.n_name = #{n_name} AND orderDate BETWEEN DATE_ADD(NOW(),INTERVAL -6 MONTH ) AND NOW()
+		GROUP BY o.orderNO
+		ORDER BY o.orderDate DESC
+	</select>
+
+	<select id="select_Orders_1Y" parameterType="String" resultMap="order">
+		SELECT o.orderNO, o.orderNO_, o.articleNO, o.quantity, o.price, b.title, i.imageFileName, o.orderDate, o.review_chk, b.deleted
+		FROM s_order o,s_board b,s_imagefile i
+		WHERE o.articleNO=b.articleNO AND i.articleNO=b.articleNO AND o.n_name = #{n_name} AND orderDate BETWEEN DATE_ADD(NOW(),INTERVAL -1 YEAR ) AND NOW()
+		GROUP BY o.orderNO
+		ORDER BY o.orderDate DESC
+	</select>
+	
+	<select id="selectOrderDetail" parameterType="int" resultMap="order">
+		SELECT o.orderNO, o.articleNO, i.imageFileName, b.title, o.quantity, o.price, o.phoneNum, o.address, o.addressDetail, o.msg, o.pay_method, o.depositName, o.bank, o.orderDate
+		FROM s_order o,s_board b,s_imagefile i
+		WHERE o.orderNO_ = #{orderNO_} AND o.articleNO=b.articleNO AND i.articleNO=b.articleNO
+		GROUP BY orderNO
+	</select>
+	
+	<update id="updateReview_Chk_Y" parameterType="int">
+		UPDATE s_order
+		SET review_chk = "Y"
+		WHERE orderNO = #{orderNO}
+	</update>
+
+</mapper>

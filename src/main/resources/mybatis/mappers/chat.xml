@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.chat">
+	<resultMap id="chatResult" type="chatVO">
+		<result property="chatID" column="chatID" />
+        <result property="fromID" column="fromID" />
+        <result property="toID" column="toID" />
+        <result property="chatContent" column="chatContent" />
+        <result property="chatTime" column="chatTime" />
+        <result property="chatRead" column="chatRead" />
+	</resultMap>
+
+	<select id="selectChatListByID" parameterType="chatVO" resultMap="chatResult">
+		SELECT *
+		FROM CHAT
+		WHERE ((fromID = #{fromID} AND toID = #{toID}) OR (fromID = #{toID} AND toID = #{fromID})) AND chatID > #{chatID}
+		ORDER BY chatTime
+	</select>
+
+	<select id="selectChatListByRecent" parameterType="java.util.HashMap" resultMap="chatResult">
+		SELECT *
+		FROM CHAT
+		WHERE ((fromID = #{fromID} AND toID = #{toID}) OR (fromID = #{toID} AND toID = #{fromID})) AND chatID > (SELECT MAX(chatID) - ${number} FROM CHAT)
+		ORDER BY chatTime
+	</select>
+
+    <insert id="insertChat" parameterType="java.util.HashMap">
+    	INSERT INTO CHAT
+    	VALUES (NULL, #{fromID}, #{toID}, #{chatContent}, NOW(), #{chatRead})
+	</insert>
+
+	<!-- 읽었는지 확인 -->
+	<update id="readChat" parameterType="chatVO">
+		UPDATE CHAT
+		SET chatRead = 1
+		WHERE (fromID = #{toID} AND toID = #{fromID})
+	</update>
+
+	<select id="getAllUnreadChat" parameterType="String" resultType="int">
+		SELECT COUNT(chatID)
+		FROM CHAT
+		WHERE toID = #{userID} AND chatRead = 0
+	</select>
+
+	<select id="selectBox" parameterType="String" resultMap="chatResult">
+		SELECT *
+		FROM CHAT
+		WHERE chatID IN (SELECT MAX(chatID) FROM CHAT WHERE toID = #{userID} OR fromID = #{userID} GROUP BY fromID, toID)
+		ORDER BY chatTime DESC
+	</select>
+
+	<select id="getUnreadChat" parameterType="java.util.HashMap" resultType="int">
+		SELECT COUNT(chatID)
+		FROM CHAT
+		WHERE fromID = #{fromID} AND toID = #{toID} AND chatRead = 0
+	</select>
+
+  <select id="getProfile" parameterType="String" resultType="String">
+		SELECT profile
+		FROM v_member
+		WHERE n_name = #{fromID}
+	</select>
+</mapper>
